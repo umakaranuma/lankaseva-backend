@@ -59,12 +59,16 @@ class ServiceViewSet(viewsets.ModelViewSet):
 
     @action(detail=False, methods=['get'])
     def districts(self, request):
-        districts = (
-            Service.objects.order_by('district')
-            .values_list('district', flat=True)
-            .distinct()
-        )
-        return Response(list(districts))
+        # Always return the full list of 25 districts of Sri Lanka
+        # so the admin portal dropdown has all options available.
+        districts = [
+            "Ampara", "Anuradhapura", "Badulla", "Batticaloa", "Colombo",
+            "Galle", "Gampaha", "Hambantota", "Jaffna", "Kalutara",
+            "Kandy", "Kegalle", "Kilinochchi", "Kurunegala", "Mannar",
+            "Matale", "Matara", "Monaragala", "Mullaitivu", "Nuwara Eliya",
+            "Polonnaruwa", "Puttalam", "Ratnapura", "Trincomalee", "Vavuniya"
+        ]
+        return Response(districts)
 
     @action(detail=False, methods=['get'])
     def categories(self, request):

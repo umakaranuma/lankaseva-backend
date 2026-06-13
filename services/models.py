@@ -6,18 +6,20 @@ from django.db import models
 CHECK_KW = 'condition' if django.VERSION >= (5, 1) else 'check'
 
 
-class ServiceCategory(models.TextChoices):
-    """Mirrors the mobile app's ServiceCategory enum (app_constants.dart)."""
+class Category(models.Model):
+    """Dynamic categories that the admin can manage."""
+    code = models.CharField(max_length=50, primary_key=True)
+    name_en = models.CharField(max_length=100)
+    name_si = models.CharField(max_length=100)
+    name_ta = models.CharField(max_length=100)
+    icon = models.CharField(max_length=50, default='account_balance_outlined')
+    color = models.CharField(max_length=10, default='0xFF0F6E56')
 
-    ELECTRICITY = 'electricity', 'Electricity'
-    WATER = 'water', 'Water'
-    HOSPITAL = 'hospital', 'Hospitals'
-    POLICE = 'police', 'Police'
-    COURT = 'court', 'Courts'
-    SCHOOL = 'school', 'Schools'
-    GOVERNMENT = 'government', 'Government'
-    TRANSPORT = 'transport', 'Transport'
-    POST = 'post', 'Post Office'
+    class Meta:
+        db_table = 'categories'
+
+    def __str__(self):
+        return self.name_en
 
 class Service(models.Model):
     # Integer auto-PK (id). The old slug ('colombo_nhsl') is kept as a stable
@@ -32,7 +34,7 @@ class Service(models.Model):
     department_si = models.CharField(max_length=255)
     department_ta = models.CharField(max_length=255)
     
-    category = models.CharField(max_length=50, choices=ServiceCategory.choices)
+    category = models.ForeignKey(Category, on_delete=models.RESTRICT, db_column='category')
     district = models.CharField(max_length=100)
     
     address_en = models.TextField()

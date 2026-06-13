@@ -21,6 +21,7 @@ class AppUser(AbstractBaseUser):
     # Integer auto-PK (id) is added by Django; phone_hash stays the unique
     # login identifier but is no longer the primary key.
     phone_hash = models.CharField(max_length=255, unique=True)
+    email = models.EmailField(unique=True, null=True, blank=True)
     display_name = models.CharField(max_length=255, default='User')
     avatar_url = models.URLField(max_length=1024, null=True, blank=True)
     created_at = models.DateTimeField(auto_now_add=True)

@@ -18,6 +18,8 @@ class IsOwnerOrReadOnly(permissions.BasePermission):
         return obj.user_id == request.user.pk
 
 
+from config.permissions import IsOwnerOrAdminOrReadOnly
+
 class ReviewViewSet(viewsets.ModelViewSet):
     """
     Public API for viewing reviews; writes require authentication.
@@ -26,7 +28,7 @@ class ReviewViewSet(viewsets.ModelViewSet):
     """
 
     serializer_class = ReviewSerializer
-    permission_classes = [IsAuthenticatedOrReadOnly, IsOwnerOrReadOnly]
+    permission_classes = [IsAuthenticatedOrReadOnly, IsOwnerOrAdminOrReadOnly]
 
     def get_queryset(self):
         queryset = (

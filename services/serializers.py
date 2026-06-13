@@ -1,7 +1,12 @@
 from django.db import transaction
 from rest_framework import serializers
 
-from .models import OpeningHourSlot, OpeningHours, Service, ServicePhone
+from .models import OpeningHourSlot, OpeningHours, Service, ServicePhone, Category
+
+class CategorySerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Category
+        fields = '__all__'
 
 
 class ServicePhoneSerializer(serializers.ModelSerializer):

@@ -5,9 +5,16 @@ from rest_framework.response import Response
 
 from config.permissions import IsAdminOrReadOnly
 
-from .models import Service, ServiceCategory
-from .serializers import ServiceSerializer
+from .models import Service, Category
+from .serializers import ServiceSerializer, CategorySerializer
 
+class CategoryViewSet(viewsets.ModelViewSet):
+    """
+    CRUD for categories.
+    """
+    queryset = Category.objects.all()
+    serializer_class = CategorySerializer
+    permission_classes = [IsAdminOrReadOnly]
 
 class ServiceViewSet(viewsets.ModelViewSet):
     """
@@ -24,7 +31,7 @@ class ServiceViewSet(viewsets.ModelViewSet):
     permission_classes = [IsAdminOrReadOnly]
 
     def get_queryset(self):
-        queryset = (Service.objects.select_related('hours')
+        queryset = (Service.objects.select_related('hours', 'category')
                     .prefetch_related('phones', 'hours__slots'))
         params = self.request.query_params
 
@@ -62,5 +69,5 @@ class ServiceViewSet(viewsets.ModelViewSet):
     @action(detail=False, methods=['get'])
     def categories(self, request):
         return Response([
-            {'id': value, 'label': label} for value, label in ServiceCategory.choices
+            {'id': c.code, 'label': c.name_en} for c in Category.objects.all()
         ])

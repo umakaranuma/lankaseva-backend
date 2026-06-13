@@ -127,3 +127,50 @@ class DeleteAccountView(APIView):
     def delete(self, request):
         request.user.delete()  # cascades to tokens and reviews
         return Response(status=status.HTTP_204_NO_CONTENT)
+
+from rest_framework import viewsets
+from rest_framework.decorators import action
+from config.permissions import IsAdmin
+from .serializers import AdminUserSerializer
+
+class AdminLoginView(APIView):
+    authentication_classes = []
+
+    def post(self, request):
+        email = request.data.get('email')
+        password = request.data.get('password')
+
+        if not email or not password:
+            return Response({'error': 'Email and password are required'}, status=status.HTTP_400_BAD_REQUEST)
+
+        user = AppUser.objects.filter(email=email).first()
+        if not user or not user.check_password(password):
+            return Response({'error': 'Invalid credentials'}, status=status.HTTP_401_UNAUTHORIZED)
+
+        if not user.is_admin:
+            return Response({'error': 'User is not an admin'}, status=status.HTTP_403_FORBIDDEN)
+
+        token = AuthToken.issue(user)
+        return Response({
+            'token': token.key,
+            'user': AppUserSerializer(user).data
+        })
+
+class AdminUserViewSet(viewsets.ModelViewSet):
+    """
+    Admin API for managing users (viewing details, suspending).
+    """
+    queryset = AppUser.objects.all().order_by('-created_at')
+    serializer_class = AdminUserSerializer
+    permission_classes = [IsAdmin]
+
+    @action(detail=False, methods=['get'])
+    def stats(self, request):
+        total_users = AppUser.objects.count()
+        active_users = AppUser.objects.filter(is_active=True).count()
+        admin_users = AppUser.objects.filter(is_admin=True).count()
+        return Response({
+            'total_users': total_users,
+            'active_users': active_users,
+            'admin_users': admin_users,
+        })

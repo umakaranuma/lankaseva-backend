@@ -26,3 +26,15 @@ class IsAdminOrReadOnly(permissions.BasePermission):
             and request.user.is_authenticated
             and getattr(request.user, 'is_admin', False)
         )
+
+class IsOwnerOrAdminOrReadOnly(permissions.BasePermission):
+    """Anyone can read, owners can edit/delete, admins can edit/delete."""
+
+    def has_object_permission(self, request, view, obj):
+        if request.method in permissions.SAFE_METHODS:
+            return True
+        if request.user and getattr(request.user, 'is_admin', False):
+            return True
+        # For User objects, obj might be the user itself; for reviews, obj.user_id
+        owner_id = getattr(obj, 'user_id', getattr(obj, 'pk', None))
+        return owner_id == request.user.pk

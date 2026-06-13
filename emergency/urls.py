@@ -1,7 +1,11 @@
-from django.urls import path
+from django.urls import include, path
+from rest_framework.routers import DefaultRouter
 
-from .views import EmergencyHotlineList
+from .views import EmergencyHotlineViewSet
+
+router = DefaultRouter()
+router.register(r'', EmergencyHotlineViewSet, basename='emergency')
 
 urlpatterns = [
-    path('', EmergencyHotlineList.as_view(), name='emergency-hotlines'),
+    path('', include(router.urls)),
 ]

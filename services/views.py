@@ -1,23 +1,12 @@
 from django.db.models import Q
-from rest_framework import permissions, viewsets
+from rest_framework import viewsets
 from rest_framework.decorators import action
 from rest_framework.response import Response
 
+from config.permissions import IsAdminOrReadOnly
+
 from .models import Service, ServiceCategory
 from .serializers import ServiceSerializer
-
-
-class IsAdminOrReadOnly(permissions.BasePermission):
-    """Anyone can read; only users flagged is_admin may store/edit/delete."""
-
-    def has_permission(self, request, view):
-        if request.method in permissions.SAFE_METHODS:
-            return True
-        return bool(
-            request.user
-            and request.user.is_authenticated
-            and getattr(request.user, 'is_admin', False)
-        )
 
 
 class ServiceViewSet(viewsets.ModelViewSet):

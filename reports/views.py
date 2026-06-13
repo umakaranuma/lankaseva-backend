@@ -9,6 +9,7 @@ from .serializers import ReportSerializer
 class ReportViewSet(mixins.CreateModelMixin,
                     mixins.ListModelMixin,
                     mixins.RetrieveModelMixin,
+                    mixins.UpdateModelMixin,
                     viewsets.GenericViewSet):
     """
     Store user reports.

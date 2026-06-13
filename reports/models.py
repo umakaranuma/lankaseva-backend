@@ -14,6 +14,12 @@ class Report(models.Model):
         BUG = 'bug', 'App bug'
         SUGGESTION = 'suggestion', 'Suggestion'
 
+    class ReportStatus(models.TextChoices):
+        PENDING = 'pending', 'Pending'
+        INVESTIGATING = 'investigating', 'Investigating'
+        RESOLVED = 'resolved', 'Resolved'
+        DISMISSED = 'dismissed', 'Dismissed'
+
     user = models.ForeignKey(
         settings.AUTH_USER_MODEL, on_delete=models.SET_NULL,
         null=True, blank=True, related_name='reports')
@@ -23,7 +29,8 @@ class Report(models.Model):
     report_type = models.CharField(
         max_length=20, choices=ReportType.choices, default=ReportType.INCORRECT_INFO)
     message = models.TextField()
-    is_resolved = models.BooleanField(default=False)
+    status = models.CharField(
+        max_length=20, choices=ReportStatus.choices, default=ReportStatus.PENDING)
     created_at = models.DateTimeField(auto_now_add=True)
 
     class Meta:

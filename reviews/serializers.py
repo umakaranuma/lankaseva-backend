@@ -1,5 +1,3 @@
-import uuid
-
 from django.db import transaction
 from rest_framework import serializers
 
@@ -12,9 +10,12 @@ class ReviewTagSerializer(serializers.ModelSerializer):
 
 class ReviewSerializer(serializers.ModelSerializer):
     tags = ReviewTagSerializer(many=True, read_only=True)
-    user_id = serializers.CharField(source='user.phone_hash', read_only=True)
+    # Left-join to the user table: the reviewer's integer id + their name.
+    user_id = serializers.IntegerField(source='user.id', read_only=True)
     display_name = serializers.CharField(source='user.display_name', read_only=True)
-    
+    # Place name carried alongside the service id for convenience on reads.
+    service_name = serializers.CharField(source='service.name_en', read_only=True)
+
     stars = serializers.IntegerField(min_value=1, max_value=5)
     positive_tags = serializers.ListField(
         child=serializers.CharField(max_length=100), write_only=True, required=False
@@ -26,18 +27,17 @@ class ReviewSerializer(serializers.ModelSerializer):
     class Meta:
         model = Review
         fields = [
-            'id', 'service', 'user_id', 'display_name', 'stars', 'text', 
-            'helpful_count', 'created_at', 'edited_at', 'tags',
-            'positive_tags', 'negative_tags'
+            'id', 'service', 'service_name', 'user_id', 'display_name',
+            'stars', 'text', 'helpful_count', 'created_at', 'edited_at',
+            'tags', 'positive_tags', 'negative_tags'
         ]
-        read_only_fields = ['id', 'user_id', 'display_name', 'helpful_count', 'created_at', 'edited_at']
+        read_only_fields = ['id', 'service_name', 'user_id', 'display_name',
+                            'helpful_count', 'created_at', 'edited_at']
 
     @transaction.atomic
     def create(self, validated_data):
         positive_tags = validated_data.pop('positive_tags', [])
         negative_tags = validated_data.pop('negative_tags', [])
-
-        validated_data['id'] = f"r{uuid.uuid4().hex}"
 
         review = Review.objects.create(**validated_data)
 

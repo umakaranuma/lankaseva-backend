@@ -29,6 +29,7 @@ INSTALLED_APPS = [
     'services',
     'reviews',
     'emergency',
+    'reports',
 ]
 
 MIDDLEWARE = [

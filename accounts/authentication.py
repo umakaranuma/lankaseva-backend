@@ -49,10 +49,14 @@ class AppTokenAuthentication(BaseAuthentication):
         try:
             token = AuthToken.objects.select_related('user').get(key=key)
         except AuthToken.DoesNotExist:
-            raise exceptions.AuthenticationFailed('Invalid token.')
+            # Unknown / stale token (e.g. issued before a DB reset): treat the
+            # request as anonymous instead of hard-failing. Public reads then
+            # still work, and protected endpoints return 401 via their own
+            # permission check so the client knows to re-authenticate.
+            return None
 
         if not token.user.is_active:
-            raise exceptions.AuthenticationFailed('User inactive or deleted.')
+            return None
 
         return (token.user, token)
 

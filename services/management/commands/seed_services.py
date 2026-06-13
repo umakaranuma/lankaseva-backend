@@ -73,7 +73,7 @@ class Command(BaseCommand):
                  is_emergency=False):
             nonlocal created, updated
             _, was_created = Service.objects.update_or_create(
-                id=service_id,
+                code=service_id,  # stable slug; integer id is auto-assigned
                 defaults={
                     'name_en': name[0], 'name_si': name[1], 'name_ta': name[2],
                     'department_en': department[0], 'department_si': department[1],
@@ -86,7 +86,7 @@ class Command(BaseCommand):
                     'is_emergency': is_emergency,
                 },
             )
-            service = Service.objects.get(pk=service_id)
+            service = Service.objects.get(code=service_id)
             service.phones.all().delete()
             ServicePhone.objects.bulk_create([
                 ServicePhone(service=service, label_en=p[0][0], label_si=p[0][1],

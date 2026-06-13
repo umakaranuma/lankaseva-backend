@@ -3,7 +3,7 @@ from django.conf import settings
 from services.models import Service
 
 class Review(models.Model):
-    id = models.CharField(max_length=100, primary_key=True)
+    # Integer auto-PK (id) added by Django.
     service = models.ForeignKey(Service, on_delete=models.CASCADE, related_name='reviews')
     user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='reviews')
     

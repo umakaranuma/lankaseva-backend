@@ -20,8 +20,10 @@ class ServiceCategory(models.TextChoices):
     POST = 'post', 'Post Office'
 
 class Service(models.Model):
-    id = models.CharField(max_length=100, primary_key=True)
-    
+    # Integer auto-PK (id). The old slug ('colombo_nhsl') is kept as a stable
+    # unique `code` so seeds stay idempotent and human-readable.
+    code = models.CharField(max_length=100, unique=True)
+
     name_en = models.CharField(max_length=255)
     name_si = models.CharField(max_length=255)
     name_ta = models.CharField(max_length=255)

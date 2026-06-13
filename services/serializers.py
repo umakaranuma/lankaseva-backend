@@ -1,11 +1,7 @@
-import re
-
 from django.db import transaction
 from rest_framework import serializers
 
-from .models import OpeningHours, Service, ServicePhone
-
-DAY_RANGE_RE = re.compile(r'^\d{2}:\d{2}-\d{2}:\d{2}$')
+from .models import OpeningHourSlot, OpeningHours, Service, ServicePhone
 
 
 class ServicePhoneSerializer(serializers.ModelSerializer):
@@ -14,17 +10,32 @@ class ServicePhoneSerializer(serializers.ModelSerializer):
         fields = ['label_en', 'label_si', 'label_ta', 'number', 'is_primary']
 
 
-class OpeningHoursSerializer(serializers.ModelSerializer):
+class OpeningHourSlotSerializer(serializers.ModelSerializer):
+    open = serializers.TimeField(source='open_time', format='%H:%M')
+    close = serializers.TimeField(source='close_time', format='%H:%M')
+
     class Meta:
-        model = OpeningHours
-        exclude = ['id', 'service']
+        model = OpeningHourSlot
+        fields = ['weekday', 'open', 'close']
 
     def validate(self, attrs):
-        for day in ('mon', 'tue', 'wed', 'thu', 'fri', 'sat', 'sun'):
-            value = attrs.get(day)
-            if value and not DAY_RANGE_RE.match(value):
-                raise serializers.ValidationError(
-                    {day: 'Must be "HH:MM-HH:MM" or null for closed.'})
+        if attrs['close_time'] <= attrs['open_time']:
+            raise serializers.ValidationError('close must be after open.')
+        return attrs
+
+
+class OpeningHoursSerializer(serializers.ModelSerializer):
+    days = OpeningHourSlotSerializer(source='slots', many=True, required=False)
+
+    class Meta:
+        model = OpeningHours
+        fields = ['is_always_open', 'notes', 'days']
+
+    def validate(self, attrs):
+        slots = attrs.get('slots', [])
+        weekdays = [s['weekday'] for s in slots]
+        if len(weekdays) != len(set(weekdays)):
+            raise serializers.ValidationError({'days': 'Duplicate weekday entries.'})
         return attrs
 
 
@@ -59,7 +70,7 @@ class ServiceSerializer(serializers.ModelSerializer):
         service = Service.objects.create(**validated_data)
         self._save_phones(service, phones)
         if hours is not None:
-            OpeningHours.objects.create(service=service, **hours)
+            self._save_hours(service, hours)
         return service
 
     @transaction.atomic
@@ -73,11 +84,27 @@ class ServiceSerializer(serializers.ModelSerializer):
             instance.phones.all().delete()
             self._save_phones(instance, phones)
         if hours is not None:
-            OpeningHours.objects.update_or_create(service=instance, defaults=hours)
-        return instance
+            self._save_hours(instance, hours)
+        # Re-fetch so the response reflects the replaced phones/hours rather
+        # than the relation caches loaded before the update.
+        return (Service.objects.select_related('hours')
+                .prefetch_related('phones', 'hours__slots').get(pk=instance.pk))
 
     @staticmethod
     def _save_phones(service, phones):
         ServicePhone.objects.bulk_create(
             [ServicePhone(service=service, **phone) for phone in phones]
+        )
+
+    @staticmethod
+    def _save_hours(service, hours):
+        slots = hours.pop('slots', [])
+        record, _ = OpeningHours.objects.update_or_create(
+            service=service,
+            defaults={'is_always_open': hours.get('is_always_open', False),
+                      'notes': hours.get('notes')},
+        )
+        record.slots.all().delete()
+        OpeningHourSlot.objects.bulk_create(
+            [OpeningHourSlot(hours=record, **slot) for slot in slots]
         )

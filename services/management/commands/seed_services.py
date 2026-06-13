@@ -10,7 +10,7 @@ import random
 from django.core.management.base import BaseCommand
 from django.db import transaction
 
-from services.models import OpeningHours, Service, ServicePhone
+from services.models import OpeningHourSlot, OpeningHours, Service, ServicePhone
 
 # (name, province, lat, lng) — district capitals, from app_constants.dart.
 DISTRICTS = [
@@ -41,11 +41,9 @@ DISTRICTS = [
     ('Kegalle', 'Sabaragamuwa', 7.2513, 80.3464),
 ]
 
-OFFICE_HOURS = dict.fromkeys(('mon', 'tue', 'wed', 'thu', 'fri'), '08:30-16:15')
-SLTB_HOURS = {
-    **dict.fromkeys(('mon', 'tue', 'wed', 'thu', 'fri', 'sat'), '05:00-21:00'),
-    'sun': '06:00-20:00',
-}
+# (weekday 1=Mon..7=Sun, open, close)
+OFFICE_HOURS = [(d, '08:30', '16:15') for d in range(1, 6)]
+SLTB_HOURS = [(d, '05:00', '21:00') for d in range(1, 7)] + [(7, '06:00', '20:00')]
 
 
 class Command(BaseCommand):
@@ -96,11 +94,17 @@ class Command(BaseCommand):
                              is_primary=(i == 0))
                 for i, p in enumerate(phones)
             ])
-            hours_defaults = {'is_always_open': hours == 'always',
-                              **dict.fromkeys(('mon', 'tue', 'wed', 'thu', 'fri', 'sat', 'sun'))}
+            record, _ = OpeningHours.objects.update_or_create(
+                service=service,
+                defaults={'is_always_open': hours == 'always', 'notes': None},
+            )
+            record.slots.all().delete()
             if hours != 'always':
-                hours_defaults.update(hours)
-            OpeningHours.objects.update_or_create(service=service, defaults=hours_defaults)
+                OpeningHourSlot.objects.bulk_create([
+                    OpeningHourSlot(hours=record, weekday=wd,
+                                    open_time=open_t, close_time=close_t)
+                    for wd, open_t, close_t in hours
+                ])
             created += was_created
             updated += not was_created
 

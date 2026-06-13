@@ -28,6 +28,7 @@ INSTALLED_APPS = [
     'accounts',
     'services',
     'reviews',
+    'emergency',
 ]
 
 MIDDLEWARE = [
@@ -71,7 +72,7 @@ REST_FRAMEWORK = {
     'DEFAULT_RENDERER_CLASSES': [
         'rest_framework.renderers.JSONRenderer',
     ],
-    'DEFAULT_PAGINATION_CLASS': 'rest_framework.pagination.PageNumberPagination',
+    'DEFAULT_PAGINATION_CLASS': 'config.pagination.DefaultPagination',
     'PAGE_SIZE': 20,
     'DEFAULT_THROTTLE_CLASSES': [
         'rest_framework.throttling.AnonRateThrottle',

@@ -35,7 +35,8 @@ class ServiceViewSet(viewsets.ModelViewSet):
     permission_classes = [IsAdminOrReadOnly]
 
     def get_queryset(self):
-        queryset = Service.objects.prefetch_related('phones').select_related('hours')
+        queryset = (Service.objects.select_related('hours')
+                    .prefetch_related('phones', 'hours__slots'))
         params = self.request.query_params
 
         category = params.get('category')

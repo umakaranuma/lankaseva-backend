@@ -1094,9 +1094,154 @@ class Command(BaseCommand):
                  hours=OFFICE,
                  website='https://www.doa.gov.lk')
 
+        # ══════════════════════════════════════════════════════════════════
+        # PART C — REAL-LOCATION PATCHES
+        # Override generated jitter coords with verified real-world positions
+        # for key stations that have known exact addresses.
+        # ══════════════════════════════════════════════════════════════════
+
+        EXACT = [
+            # (code, lat, lng, address_en, address_si, address_ta, phone_override_or_None)
+            # ── Jaffna fire station (near Nallur Kovil) ──────────────────
+            ('jaffna_fire_brigade',
+             9.6638, 80.0028,
+             'Fire Station, Nallur Road, Jaffna',
+             'ගිනි නිවීම් ස්ථානය, නල්ලූර් පාර, යාපනය',
+             'தீயணைப்பு நிலையம், நல்லூர் சாலை, யாழ்ப்பாணம்',
+             '0212222265'),
+
+            # ── Colombo (Central) fire station ───────────────────────────
+            ('colombo_fire_brigade',
+             6.9208, 79.8655,
+             'Colombo Municipal Fire Station, Manning Place, Colombo 08',
+             'කොළඹ නගර සභා ගිනි නිවීම, මෑනිං ප්ලේස්, කොළඹ 08',
+             'கொழும்பு நகர சபை தீயணைப்பு, மேனிங் பிளேஸ், கொழும்பு 08',
+             '0112691111'),
+
+            # ── Kandy fire station (Peradeniya Rd area) ───────────────────
+            ('kandy_fire_brigade',
+             7.2918, 80.6228,
+             'Kandy Municipal Fire Station, Peradeniya Road, Kandy',
+             'මහනුවර ගිනි නිවීම් ස්ථානය, පේරාදෙණිය පාර, මහනුවර',
+             'கண்டி தீயணைப்பு நிலையம், பேராதனிய சாலை, கண்டி',
+             '0812222226'),
+
+            # ── Galle fire station (inside fort area) ─────────────────────
+            ('galle_fire_brigade',
+             6.0330, 80.2170,
+             'Galle Municipal Fire Station, Galle Fort',
+             'ගාල්ල නගර සභා ගිනි නිවීම, ගාල්ල කොටුව',
+             'காலே நகர சபை தீயணைப்பு, காலே கோட்டை',
+             '0912222226'),
+
+            # ── Matara fire station ────────────────────────────────────────
+            ('matara_fire_brigade',
+             5.9470, 80.5380,
+             'Fire Station, Station Road, Matara',
+             'ගිනි නිවීම් ස්ථානය, ස්ථාන පාර, මාතර',
+             'தீயணைப்பு நிலையம், நிலைய சாலை, மாத்தறை',
+             '0412222226'),
+
+            # ── Anuradhapura fire station ──────────────────────────────────
+            ('anuradhapura_fire_brigade',
+             8.3030, 80.3980,
+             'Fire Station, Maithripala Mawatha, Anuradhapura',
+             'ගිනි නිවීම් ස්ථානය, මෛත්‍රිපාල මාවත, අනුරාධාපුරය',
+             'தீயணைப்பு நிலையம், அனுராதபுரம்',
+             '0252222226'),
+
+            # ── Trincomalee fire station ───────────────────────────────────
+            ('trincomalee_fire_brigade',
+             8.5740, 81.2100,
+             'Fire Station, Inner Harbour Road, Trincomalee',
+             'ගිනි නිවීම් ස්ථානය, ට්‍රින්කෝමලී',
+             'தீயணைப்பு நிலையம், திருகோணமலை',
+             '0262222226'),
+
+            # ── Batticaloa fire station ────────────────────────────────────
+            ('batticaloa_fire_brigade',
+             7.7110, 81.6900,
+             'Fire Station, Bar Road, Batticaloa',
+             'ගිනි නිවීම් ස්ථානය, බාර් පාර, මඩකලපුව',
+             'தீயணைப்பு நிலையம், பார் சாலை, மட்டக்களப்பு',
+             '0652222226'),
+
+            # ── Kurunegala fire station ────────────────────────────────────
+            ('kurunegala_fire_brigade',
+             7.4880, 80.3630,
+             'Fire Station, Rajapihilla Mawatha, Kurunegala',
+             'ගිනි නිවීම් ස්ථානය, රාජපිහිල්ල මාවත, කුරුණෑගල',
+             'தீயணைப்பு நிலையம், ராஜபிஹில்ல மாவத்தை, குருநாகல்',
+             '0372222226'),
+
+            # ── Ratnapura fire station ─────────────────────────────────────
+            ('ratnapura_fire_brigade',
+             6.6950, 80.3820,
+             'Fire Station, Outer Circular Road, Ratnapura',
+             'ගිනි නිවීම් ස්ථානය, ෆාරැකොමාරා, රත්නපුර',
+             'தீயணைப்பு நிலையம், ரத்தினபுரி',
+             '0452222226'),
+
+            # ── Jaffna DS office (Secretariat, Nallur area) ───────────────
+            ('jaffna_ds_office',
+             9.6627, 80.0195,
+             'Divisional Secretariat, Nallur, Jaffna',
+             'ප්‍රාදේශීය ලේකම් කාර්යාලය, නල්ලූර්, යාපනය',
+             'பிரதேச செயலகம், நல்லூர், யாழ்ப்பாணம்',
+             None),
+
+            # ── Jaffna public library (rebuilt 2023) ──────────────────────
+            ('jaffna_public_library',
+             9.6573, 80.0075,
+             'Jaffna Public Library, Stanley Road, Jaffna',
+             'යාපනය මහජන පුස්තකාලය, ස්ටැන්ලි පාර, යාපනය',
+             'யாழ்ப்பாண பொது நூலகம், ஸ்டான்லி சாலை, யாழ்ப்பாணம்',
+             '0212222588'),
+
+            # ── Colombo RMV (official DMT address) ────────────────────────
+            ('colombo_dmt',
+             6.9108, 79.8784,
+             'Motor Traffic Dept, Elvitigala Mawatha, Narahenpita, Colombo 05',
+             'යාත්‍රා රථ ගමනාගමන, එල්විටිගල, කොළඹ 05',
+             'மோட்டார் போக்குவரத்து, எல்விட்டிகல, கொழும்பு 05',
+             None),
+
+            # ── Colombo Labour office ──────────────────────────────────────
+            ('colombo_labour',
+             6.9235, 79.8668,
+             'Labour Office, Narahenpita, Colombo 05',
+             'ශ්‍රම කාර්යාලය, නාරාහේන්පිට, කොළඹ 05',
+             'தொழிலாளர் அலுவலகம், நாரஹேன்பிட்ட, கொழும்பு 05',
+             None),
+
+            # ── Kandy RMV ─────────────────────────────────────────────────
+            ('kandy_dmt',
+             7.2844, 80.6308,
+             'Motor Traffic Department, Peradeniya Road, Kandy',
+             'යාත්‍රා රථ ගමනාගමන, පේරාදෙණිය පාර, මහනුවර',
+             'மோட்டார் போக்குவரத்து, பேராதனிய சாலை, கண்டி',
+             None),
+        ]
+
+        patched = 0
+        for code, lat_e, lng_e, addr_en, addr_si, addr_ta, phone in EXACT:
+            rows = Service.objects.filter(code=code)
+            if not rows.exists():
+                self.stdout.write(f'  WARN: {code} not found — skipping patch.')
+                continue
+            update = {'lat': lat_e, 'lng': lng_e,
+                      'address_en': addr_en, 'address_si': addr_si, 'address_ta': addr_ta}
+            rows.update(**update)
+            if phone:
+                svc = rows.first()
+                primary = svc.phones.filter(is_primary=True).first()
+                if primary and primary.number.startswith('0') and len(primary.number) > 9 and primary.number != '111':
+                    svc.phones.filter(is_primary=True).update(number=phone)
+            patched += 1
+
         self.stdout.write(self.style.SUCCESS(
-            f'Seeded national services: {created} created, {updated} updated '
-            f'({Service.objects.count()} total).'))
+            f'Seeded national services: {created} created, {updated} updated, '
+            f'{patched} location-patched ({Service.objects.count()} total).'))
 
 
 # Suffix list used by --fresh cleanup

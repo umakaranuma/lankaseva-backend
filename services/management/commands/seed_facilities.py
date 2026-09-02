@@ -1,6 +1,6 @@
 """Seeds the full government-facility directory from the curated spreadsheet.
 
-Source: services/management/commands/data/facilities_v6.xlsx
+Source: services/management/commands/data/facilities_v7.xlsx
     31 category sheets, one row per office, each with real GPS coordinates.
 
 Every row becomes a Service (+ one primary phone + weekly opening hours).
@@ -29,7 +29,7 @@ from services.models import (
 )
 
 DATA_DIR = Path(__file__).resolve().parent / "data"
-DEFAULT_FILE = DATA_DIR / "facilities_v6.xlsx"
+DEFAULT_FILE = DATA_DIR / "facilities_v7.xlsx"
 
 # ── Category metadata: code -> (English name, icon, ARGB colour). ──
 # Keeps this command self-sufficient — it ensures every referenced category

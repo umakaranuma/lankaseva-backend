@@ -10,7 +10,25 @@ import random
 from django.core.management.base import BaseCommand
 from django.db import transaction
 
-from services.models import OpeningHourSlot, OpeningHours, Service, ServicePhone
+from services.models import (
+    Category, OpeningHourSlot, OpeningHours, Service, ServicePhone,
+)
+
+# The nine core categories this command assigns to services. Kept in sync with
+# the first block of seed_national.CATEGORIES so this command is self-sufficient
+# (services.category is a FK to categories.code).
+CORE_CATEGORIES = [
+    # code, name_en, name_si, name_ta, icon, color
+    ('hospital',    'Hospitals',         'රෝහල්',          'மருத்துவமனைகள்',    'local_hospital',    '0xFF1B4F72'),
+    ('police',      'Police Stations',   'පොලිස් ස්ථාන',   'காவல் நிலையங்கள்',  'local_police',      '0xFF1A252F'),
+    ('secretariat', 'Government Offices', 'රාජ්‍ය කාර්යාල', 'அரசு அலுவலகங்கள்',  'account_balance',   '0xFF1B2A3B'),
+    ('ceb',         'Electricity',       'විදුලිය',        'மின்சாரம்',         'electric_bolt',     '0xFF7B3F00'),
+    ('water',       'Water Supply',      'ජල සැපයුම',      'நீர் வழங்கல்',      'water_drop',        '0xFF154360'),
+    ('post',        'Post Offices',      'තැපැල් කාර්යාල', 'தபால் அலுவலகங்கள்', 'local_post_office', '0xFF4A235A'),
+    ('court',       'Courts',            'අධිකරණ',         'நீதிமன்றங்கள்',     'gavel',             '0xFF1C2833'),
+    ('school',      'Schools',           'පාසල්',          'பள்ளிகள்',          'school',            '0xFF0B3D0B'),
+    ('transport',   'Transport',         'ප්‍රවාහනය',      'போக்குவரத்து',      'directions_bus',    '0xFF1A1A2E'),
+]
 
 # (name, province, lat, lng) — district capitals, from app_constants.dart.
 DISTRICTS = [
@@ -55,6 +73,14 @@ class Command(BaseCommand):
 
     @transaction.atomic
     def handle(self, *args, **options):
+        for code, name_en, name_si, name_ta, icon, color in CORE_CATEGORIES:
+            Category.objects.update_or_create(
+                code=code,
+                defaults=dict(name_en=name_en, name_si=name_si, name_ta=name_ta,
+                              icon=icon, color=color),
+            )
+        self.stdout.write(f'Ensured {len(CORE_CATEGORIES)} core categories.')
+
         if options['fresh']:
             Service.objects.all().delete()
             self.stdout.write('Cleared existing services.')

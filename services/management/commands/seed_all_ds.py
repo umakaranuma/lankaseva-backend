@@ -345,7 +345,7 @@ class Command(BaseCommand):
                     'department_en': DEPT_EN,
                     'department_si': DEPT_SI,
                     'department_ta': DEPT_TA,
-                    'category_id': 'government',
+                    'category_id': 'secretariat',
                     'address_en': entry['address_en'],
                     'address_si': entry['address_en'],
                     'address_ta': entry['address_en'],

@@ -181,7 +181,7 @@ class Command(BaseCommand):
                     'department_en': 'Divisional Secretariat',
                     'department_si': 'කොට්ඨාශ ලේකම් කාර්යාලය',
                     'department_ta': 'பிரிவு செயலகம்',
-                    'category_id': 'government',
+                    'category_id': 'secretariat',
                     'address_en': ds['address_en'],
                     'address_si': ds['address_en'],
                     'address_ta': ds['address_en'],
